@@ -19,6 +19,24 @@ from attacks import *
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
+if __name__ == '__main__':
+    
+    parser = argparse.ArgumentParser(description='MNIST')
+
+    # model hyper-parameter variables
+    parser.add_argument('--itr', default=100, metavar='itr', type=int, help='no. of iteration for training')
+    parser.add_argument('--eps', default=0.15, metavar='eps', type=float, help='epsilon value')
+    parser.add_argument('--max_iter', default=10, metavar='max_iter', type=int, help='maximum iteration for attack convergence')
+    parser.add_argument('--step_size', default=0.08, metavar='step_size', type=float, help='step size in each iteration of attack')
+    
+    args = parser.parse_args()
+
+
+num_epochs = args.itr
+eps = args.eps
+max_iter = args.max_iter
+step_size = args.step_size
+
 
 trainset = datasets.MNIST(root='/home/aminul/data', train = True, download =False, transform = transforms.ToTensor())
 testset = datasets.MNIST(root='/home/aminul/data', train = False, download =False, transform = transforms.ToTensor())
@@ -40,17 +58,16 @@ criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(net.parameters(),lr=0.1)
 
 
-for epoch in range(0, 30):
-    FeaScatter_train(net,train_loader,optimizer,criterion,epoch,0.15,1,0.008,device)
-    best_acc = test(net,test_loader,optimizer,criterion,epoch,device)
+for epoch in range(0, num_epochs):
+    FeaScatter_train(net,train_loader,optimizer,criterion,epoch,eps,1,step_size,device) # 1 is the max_iter
+    best_acc = test(net,test_loader,optimizer,criterion,epoch,device,"fea_sca_adversarial_training_")
 
 
 print("\n\n\n----------------")
 print("Loading Best Model")
-checkpoint = torch.load('./checkpoint/model.t7')
+checkpoint = torch.load('./checkpoint/fea_sca_adversarial_training_model.t7')
 net = checkpoint['net']
 print("Done !")
 
-FGSM_test(net,test_loader,optimizer,criterion,0.15,device)    
-PGD_test(net,test_loader,optimizer,criterion,0.15,10,0.08,device)
-
+FGSM_test(net,test_loader,optimizer,criterion,eps,device)    
+PGD_test(net,test_loader,optimizer,criterion,eps,max_iter,step_size,device)

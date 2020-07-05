@@ -31,7 +31,7 @@ def train(net,trainloader,optim,criterion,epoch,device):
     print("Epoch: [{}]  loss: [{:.2f}] Accuracy [{:.2f}] ".format(epoch+1,train_loss/len(trainloader),
                                                                            total_correct*100/total))
     
-def test(net,testloader,optim,criterion,epoch,device):
+def test(net,testloader,optim,criterion,epoch,device,filename):
     global best_acc
     print("validation")
     net.eval()
@@ -65,7 +65,7 @@ def test(net,testloader,optim,criterion,epoch,device):
         save_point = './checkpoint/'
         if not os.path.isdir(save_point):
             os.mkdir(save_point)
-        torch.save(state, save_point+'model.t7')
+        torch.save(state, save_point+filename+'model.t7')
         best_acc = acc
         
     return best_acc
